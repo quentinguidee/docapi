@@ -6,7 +6,7 @@ var (
 	CmdTitle       CommandType = "title"
 	CmdDescription CommandType = "description"
 	CmdVersion     CommandType = "version"
-	CmdGroup       CommandType = "group"
+	CmdCode        CommandType = "code"
 	CmdRoute       CommandType = "route"
 	CmdBegin       CommandType = "begin"
 	CmdMethod      CommandType = "method"

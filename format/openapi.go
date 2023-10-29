@@ -13,8 +13,8 @@ import (
 
 type OpenAPI struct {
 	types.Format
-	path                 string
-	referencedComponents []string
+	path              string
+	referencedSchemas []string
 }
 
 func NewOpenAPI(path string) *OpenAPI {
@@ -33,6 +33,11 @@ func (f *OpenAPI) Generate() error {
 	}
 
 	err = f.CollectComponents(f.path)
+	if err != nil {
+		return err
+	}
+
+	err = f.LinkResponses()
 	if err != nil {
 		return err
 	}
@@ -65,6 +70,28 @@ func (f *OpenAPI) CollectCommands(path string) error {
 			f.Info.Desc = strings.Join(cmd.Args, " ")
 		case types.CmdVersion:
 			f.Info.Version = cmd.Args[0]
+		case types.CmdCode:
+			code := cmd.Args[0]
+			args := cmd.Args[1:]
+			ref := ""
+			resp := types.FormatResponse{}
+			if strings.HasPrefix(args[0], "{") {
+				ref = args[0][1 : len(args[0])-1]
+				args = args[1:]
+				resp.Content = map[string]types.FormatContent{
+					"application/json": {
+						Schema: types.FormatSchema{
+							Ref: fmt.Sprintf("#/components/schemas/%s", ref),
+						},
+					},
+				}
+				f.referencedSchemas = append(f.referencedSchemas, ref)
+			}
+			resp.Description = strings.Join(args, " ")
+			if f.Components.Responses == nil {
+				f.Components.Responses = map[string]types.FormatResponse{}
+			}
+			f.Components.Responses[code] = resp
 		case types.CmdRoute:
 			routes[cmd.Args[1]] = cmd.Args[0]
 		case types.CmdBegin:
@@ -88,7 +115,7 @@ func (f *OpenAPI) CollectCommands(path string) error {
 					},
 				},
 			}
-			f.referencedComponents = append(f.referencedComponents, cmd.Args[0])
+			f.referencedSchemas = append(f.referencedSchemas, cmd.Args[0])
 		case types.CmdQuery:
 			tempHandler.Parameters = append(tempHandler.Parameters, types.FormatParameter{
 				In:          "query",
@@ -114,13 +141,15 @@ func (f *OpenAPI) CollectCommands(path string) error {
 					content.Schema.Items = types.FormatItems{
 						Ref: fmt.Sprintf("#/components/schemas/%s", component),
 					}
-					f.referencedComponents = append(f.referencedComponents, component)
+					f.referencedSchemas = append(f.referencedSchemas, component)
 				} else {
 					content.Schema.Ref = cmd.Args[1]
 				}
 				resp.Content = map[string]types.FormatContent{}
 				resp.Content["application/json"] = content
 				tempHandler.Responses[cmd.Args[0]] = resp
+			} else {
+				tempHandler.Responses[cmd.Args[0]] = types.FormatResponse{}
 			}
 		case types.CmdEnd:
 			handlers[tempHandlerID] = tempHandler
@@ -145,7 +174,7 @@ func (f *OpenAPI) CollectComponents(path string) error {
 	}
 
 	for tpName, tp := range tps {
-		if !slices.Contains(f.referencedComponents, tpName) {
+		if !slices.Contains(f.referencedSchemas, tpName) {
 			continue
 		}
 		if f.Components.Schemas == nil {
@@ -165,5 +194,20 @@ func (f *OpenAPI) CollectComponents(path string) error {
 		f.Components.Schemas[tpName] = schema
 	}
 
+	return nil
+}
+
+func (f *OpenAPI) LinkResponses() error {
+	for path, routes := range f.Paths {
+		for method, route := range routes {
+			for code, resp := range route.Responses {
+				if resp.Ref != "" || resp.Description != "" {
+					continue
+				}
+				r := f.Components.Responses[code]
+				f.Paths[path][method].Responses[code] = r
+			}
+		}
+	}
 	return nil
 }

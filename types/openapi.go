@@ -40,6 +40,7 @@ type (
 	}
 
 	FormatResponse struct {
+		Ref         string                   `json:"$ref,omitempty" yaml:"$ref,omitempty"`
 		Description string                   `json:"description,omitempty" yaml:"description,omitempty"`
 		Content     map[string]FormatContent `json:"content,omitempty" yaml:"content,omitempty"`
 	}
@@ -60,6 +61,7 @@ type (
 	}
 
 	FormatComponents struct {
-		Schemas map[string]FormatSchema `json:"schemas,omitempty" yaml:"schemas,omitempty"`
+		Responses map[string]FormatResponse `json:"responses,omitempty" yaml:"responses,omitempty"`
+		Schemas   map[string]FormatSchema   `json:"schemas,omitempty" yaml:"schemas,omitempty"`
 	}
 )
