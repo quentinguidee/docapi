@@ -74,6 +74,19 @@ func (f *OpenAPI) CollectCommands(path string) error {
 			handlerMethods[tempHandlerID] = strings.ToLower(cmd.Args[0])
 		case types.CmdSummary:
 			tempHandler.Summary = strings.Join(cmd.Args, " ")
+		case types.CmdBody:
+			tempHandler.RequestBody = types.FormatRequestBody{
+				Description: strings.Join(cmd.Args[1:], " "),
+				Required:    true,
+				Content: map[string]types.FormatContent{
+					"application/json": {
+						Schema: types.FormatSchema{
+							Ref: fmt.Sprintf("#/components/schemas/%s", cmd.Args[0]),
+						},
+					},
+				},
+			}
+			f.referencedComponents = append(f.referencedComponents, cmd.Args[0])
 		case types.CmdResponse:
 			if tempHandler.Responses == nil {
 				tempHandler.Responses = map[string]types.FormatResponse{}

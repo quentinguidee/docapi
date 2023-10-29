@@ -20,7 +20,14 @@ type (
 	FormatRoute struct {
 		Summary     string                    `json:"summary,omitempty" yaml:"summary,omitempty"`
 		Description string                    `json:"description,omitempty" yaml:"description,omitempty"`
+		RequestBody FormatRequestBody         `json:"requestBody,omitempty" yaml:"requestBody,omitempty"`
 		Responses   map[string]FormatResponse `json:"responses" yaml:"responses"`
+	}
+
+	FormatRequestBody struct {
+		Description string                   `json:"description,omitempty" yaml:"description,omitempty"`
+		Required    bool                     `json:"required,omitempty" yaml:"required,omitempty"`
+		Content     map[string]FormatContent `json:"content,omitempty" yaml:"content,omitempty"`
 	}
 
 	FormatResponse struct {
