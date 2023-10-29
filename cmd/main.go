@@ -11,6 +11,13 @@ func main() {
 		println("Usage: api-doc <path/to/project>")
 		return
 	}
-	doc := generator.Generate(args[0])
-	println(doc)
+
+	gen := generator.New()
+	err := gen.Run(args[0])
+	if err != nil {
+		println(err.Error())
+		return
+	}
+
+	println(gen.Output())
 }
