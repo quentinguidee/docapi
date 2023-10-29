@@ -11,6 +11,7 @@ var (
 	CmdBegin       CommandType = "begin"
 	CmdMethod      CommandType = "method"
 	CmdSummary     CommandType = "summary"
+	CmdTags        CommandType = "tags"
 	CmdBody        CommandType = "body"
 	CmdResponse    CommandType = "response"
 	CmdEnd         CommandType = "end"

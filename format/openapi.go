@@ -74,6 +74,8 @@ func (f *OpenAPI) CollectCommands(path string) error {
 			handlerMethods[tempHandlerID] = strings.ToLower(cmd.Args[0])
 		case types.CmdSummary:
 			tempHandler.Summary = strings.Join(cmd.Args, " ")
+		case types.CmdTags:
+			tempHandler.Tags = cmd.Args
 		case types.CmdBody:
 			tempHandler.RequestBody = types.FormatRequestBody{
 				Description: strings.Join(cmd.Args[1:], " "),

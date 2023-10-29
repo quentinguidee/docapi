@@ -19,6 +19,7 @@ type (
 
 	FormatRoute struct {
 		Summary     string                    `json:"summary,omitempty" yaml:"summary,omitempty"`
+		Tags        []string                  `json:"tags,omitempty" yaml:"tags,omitempty"`
 		Description string                    `json:"description,omitempty" yaml:"description,omitempty"`
 		RequestBody FormatRequestBody         `json:"requestBody,omitempty" yaml:"requestBody,omitempty"`
 		Responses   map[string]FormatResponse `json:"responses" yaml:"responses"`
