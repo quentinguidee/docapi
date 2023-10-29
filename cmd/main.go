@@ -3,10 +3,8 @@ package main
 import (
 	"docapi/exporter/openapi"
 	"docapi/generator"
-	"fmt"
+	"log"
 	"os"
-
-	"gopkg.in/yaml.v3"
 )
 
 func main() {
@@ -19,19 +17,14 @@ func main() {
 	gen := generator.New()
 	intermediateGen, err := gen.Run(args[0])
 	if err != nil {
+		log.Fatal(err)
 		return
 	}
 
 	e := openapi.NewOpenAPIExporter()
-	out, err := e.Export(intermediateGen)
+	err = e.Export(intermediateGen)
 	if err != nil {
+		log.Fatal(err)
 		return
 	}
-
-	j, err := yaml.Marshal(out)
-	if err != nil {
-		return
-	}
-
-	fmt.Print(string(j))
 }

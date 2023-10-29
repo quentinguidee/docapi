@@ -3,7 +3,10 @@ package openapi
 import (
 	"docapi/generator"
 	"fmt"
+	"os"
 	"strings"
+
+	"gopkg.in/yaml.v3"
 )
 
 type Exporter struct{}
@@ -12,8 +15,14 @@ func NewOpenAPIExporter() *Exporter {
 	return &Exporter{}
 }
 
-func (e *Exporter) Export(inter generator.IntermediateGen) (Format, error) {
+func (e *Exporter) Export(inter generator.IntermediateGen) error {
 	out := Format{
+		Openapi: "3.0.0",
+		Info: FormatInfo{
+			Title:   inter.Api.Title,
+			Desc:    inter.Api.Desc,
+			Version: inter.Api.Version,
+		},
 		Paths: map[string]FormatRoutes{},
 	}
 
@@ -57,5 +66,26 @@ func (e *Exporter) Export(inter generator.IntermediateGen) (Format, error) {
 		}
 	}
 
-	return out, nil
+	file, err := os.OpenFile("openapi.yaml", os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	err = file.Truncate(0)
+	if err != nil {
+		return err
+	}
+
+	y, err := yaml.Marshal(out)
+	if err != nil {
+		return err
+	}
+
+	_, err = fmt.Fprint(file, string(y))
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

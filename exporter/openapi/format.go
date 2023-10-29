@@ -2,8 +2,17 @@ package openapi
 
 type (
 	Format struct {
+		Openapi string     `json:"openapi" yaml:"openapi"`
+		Info    FormatInfo `json:"info" yaml:"info"`
+
 		Paths      map[string]FormatRoutes `json:"paths,omitempty" yaml:"paths,omitempty"`
 		Components FormatComponents        `json:"components,omitempty" yaml:"components,omitempty"`
+	}
+
+	FormatInfo struct {
+		Title   string `json:"title" yaml:"title"`
+		Desc    string `json:"description" yaml:"description"`
+		Version string `json:"version" yaml:"version"`
 	}
 
 	FormatRoutes map[string]FormatRoute

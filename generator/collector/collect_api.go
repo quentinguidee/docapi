@@ -17,6 +17,10 @@ var (
 )
 
 type ApiCollector struct {
+	Title   string
+	Desc    string
+	Version string
+
 	// Groups are the http groups of the API.
 	Groups []types.Group
 	// Routes are the http routes of the API.
@@ -36,8 +40,11 @@ func NewAPICollector() *ApiCollector {
 
 func (a *ApiCollector) Output() (types.Api, error) {
 	api := types.Api{
-		Groups: a.Groups,
-		Routes: []types.ApiRoute{},
+		Title:   a.Title,
+		Desc:    a.Desc,
+		Version: a.Version,
+		Groups:  a.Groups,
+		Routes:  []types.ApiRoute{},
 	}
 	for _, route := range a.Routes {
 		r := types.ApiRoute{
@@ -82,6 +89,13 @@ func (a *ApiCollector) parse(line string) error {
 	args := strings.Split(line, " ")[1:]
 
 	switch {
+	// Meta
+	case strings.HasPrefix(line, "title"):
+		return a.title(args)
+	case strings.HasPrefix(line, "description"):
+		return a.desc(args)
+	case strings.HasPrefix(line, "version"):
+		return a.version(args)
 	// Groups
 	case strings.HasPrefix(line, "group"):
 		return a.group(args)
@@ -103,6 +117,30 @@ func (a *ApiCollector) parse(line string) error {
 		fmt.Printf("warn: %s: %s\n", ErrInvalidCommand, line)
 		return nil
 	}
+}
+
+func (a *ApiCollector) title(args []string) error {
+	if len(args) == 0 {
+		return ErrInvalidNumberOfArguments
+	}
+	a.Title = strings.Join(args, " ")
+	return nil
+}
+
+func (a *ApiCollector) desc(args []string) error {
+	if len(args) == 0 {
+		return ErrInvalidNumberOfArguments
+	}
+	a.Desc = strings.Join(args, " ")
+	return nil
+}
+
+func (a *ApiCollector) version(args []string) error {
+	if len(args) != 1 {
+		return ErrInvalidNumberOfArguments
+	}
+	a.Version = args[0]
+	return nil
 }
 
 func (a *ApiCollector) group(args []string) error {
