@@ -2,9 +2,8 @@ package types
 
 type (
 	Format struct {
-		Openapi string     `json:"openapi" yaml:"openapi"`
-		Info    FormatInfo `json:"info" yaml:"info"`
-
+		Openapi    string                  `json:"openapi" yaml:"openapi"`
+		Info       FormatInfo              `json:"info" yaml:"info"`
 		Paths      map[string]FormatRoutes `json:"paths,omitempty" yaml:"paths,omitempty"`
 		Components FormatComponents        `json:"components,omitempty" yaml:"components,omitempty"`
 	}
@@ -21,6 +20,7 @@ type (
 		Summary     string                    `json:"summary,omitempty" yaml:"summary,omitempty"`
 		Tags        []string                  `json:"tags,omitempty" yaml:"tags,omitempty"`
 		Description string                    `json:"description,omitempty" yaml:"description,omitempty"`
+		Parameters  []FormatParameter         `json:"parameters,omitempty" yaml:"parameters,omitempty"`
 		RequestBody FormatRequestBody         `json:"requestBody,omitempty" yaml:"requestBody,omitempty"`
 		Responses   map[string]FormatResponse `json:"responses" yaml:"responses"`
 	}
@@ -29,6 +29,14 @@ type (
 		Description string                   `json:"description,omitempty" yaml:"description,omitempty"`
 		Required    bool                     `json:"required,omitempty" yaml:"required,omitempty"`
 		Content     map[string]FormatContent `json:"content,omitempty" yaml:"content,omitempty"`
+	}
+
+	FormatParameter struct {
+		In          string       `json:"in,omitempty" yaml:"in,omitempty"`
+		Name        string       `json:"name,omitempty" yaml:"name,omitempty"`
+		Description string       `json:"description,omitempty" yaml:"description,omitempty"`
+		Required    bool         `json:"required,omitempty" yaml:"required,omitempty"`
+		Schema      FormatSchema `json:"schema,omitempty" yaml:"schema,omitempty"`
 	}
 
 	FormatResponse struct {

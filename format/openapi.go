@@ -89,6 +89,16 @@ func (f *OpenAPI) CollectCommands(path string) error {
 				},
 			}
 			f.referencedComponents = append(f.referencedComponents, cmd.Args[0])
+		case types.CmdQuery:
+			tempHandler.Parameters = append(tempHandler.Parameters, types.FormatParameter{
+				In:          "query",
+				Name:        cmd.Args[0],
+				Description: strings.Join(cmd.Args[2:], " "),
+				Required:    true,
+				Schema: types.FormatSchema{
+					Type: cmd.Args[1],
+				},
+			})
 		case types.CmdResponse:
 			if tempHandler.Responses == nil {
 				tempHandler.Responses = map[string]types.FormatResponse{}

@@ -13,6 +13,7 @@ var (
 	CmdSummary     CommandType = "summary"
 	CmdTags        CommandType = "tags"
 	CmdBody        CommandType = "body"
+	CmdQuery       CommandType = "query"
 	CmdResponse    CommandType = "response"
 	CmdEnd         CommandType = "end"
 )
