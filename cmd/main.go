@@ -1,9 +1,7 @@
 package main
 
 import (
-	"docapi/exporter/openapi"
-	"docapi/generator"
-	"log"
+	"docapi/format"
 	"os"
 )
 
@@ -14,17 +12,9 @@ func main() {
 		return
 	}
 
-	gen := generator.New()
-	intermediateGen, err := gen.Run(args[0])
+	err := format.NewOpenAPI(args[0]).Generate()
 	if err != nil {
-		log.Fatal(err)
-		return
-	}
-
-	e := openapi.NewOpenAPIExporter()
-	err = e.Export(intermediateGen)
-	if err != nil {
-		log.Fatal(err)
+		println(err.Error())
 		return
 	}
 }

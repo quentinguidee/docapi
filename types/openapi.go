@@ -1,4 +1,4 @@
-package openapi
+package types
 
 type (
 	Format struct {
@@ -18,9 +18,9 @@ type (
 	FormatRoutes map[string]FormatRoute
 
 	FormatRoute struct {
-		Summary     string                 `json:"summary,omitempty" yaml:"summary,omitempty"`
-		Description string                 `json:"description,omitempty" yaml:"description,omitempty"`
-		Responses   map[int]FormatResponse `json:"responses,omitempty" yaml:"responses,omitempty"`
+		Summary     string                    `json:"summary,omitempty" yaml:"summary,omitempty"`
+		Description string                    `json:"description,omitempty" yaml:"description,omitempty"`
+		Responses   map[string]FormatResponse `json:"responses" yaml:"responses"`
 	}
 
 	FormatResponse struct {
@@ -33,10 +33,14 @@ type (
 	}
 
 	FormatSchema struct {
-		Type       string                  `json:"type" yaml:"type"`
-		Items      []FormatSchema          `json:"items,omitempty" yaml:"items,omitempty"`
+		Type       string                  `json:"type,omitempty" yaml:"type,omitempty"`
+		Items      FormatItems             `json:"items,omitempty" yaml:"items,omitempty"`
 		Properties map[string]FormatSchema `json:"properties,omitempty" yaml:"properties,omitempty"`
 		Ref        string                  `json:"$ref,omitempty" yaml:"$ref,omitempty"`
+	}
+
+	FormatItems struct {
+		Ref string `json:"$ref,omitempty" yaml:"$ref,omitempty"`
 	}
 
 	FormatComponents struct {

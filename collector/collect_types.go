@@ -1,7 +1,6 @@
 package collector
 
 import (
-	"docapi/types"
 	"go/ast"
 	"go/parser"
 	"go/token"
@@ -12,19 +11,24 @@ import (
 	"strings"
 )
 
+type Struct struct {
+	Type   string
+	Fields map[string]Struct
+}
+
 type TypesCollector struct {
 	// Structs are all the structs found in the project.
-	Structs map[string]types.Value
+	Structs map[string]Struct
 }
 
 func NewTypesCollector() *TypesCollector {
 	return &TypesCollector{
-		Structs: map[string]types.Value{},
+		Structs: map[string]Struct{},
 	}
 }
 
-func (a *TypesCollector) Run(path string) error {
-	return filepath.Walk(path, func(path string, info os.FileInfo, err error) error {
+func (a *TypesCollector) Run(path string) (map[string]Struct, error) {
+	err := filepath.Walk(path, func(path string, info os.FileInfo, err error) error {
 		if info.IsDir() {
 			return nil
 		}
@@ -33,6 +37,10 @@ func (a *TypesCollector) Run(path string) error {
 		}
 		return a.collect(path)
 	})
+	if err != nil {
+		return nil, err
+	}
+	return a.Structs, nil
 }
 
 func (a *TypesCollector) collect(path string) error {
@@ -47,9 +55,9 @@ func (a *TypesCollector) collect(path string) error {
 			switch x.Type.(type) {
 			case *ast.StructType:
 				id := x.Name.Name
-				a.Structs[id] = types.Value{
+				a.Structs[id] = Struct{
 					Type:   "object",
-					Fields: map[string]types.Value{},
+					Fields: map[string]Struct{},
 				}
 				for _, field := range x.Type.(*ast.StructType).Fields.List {
 					tag := field.Tag
@@ -93,7 +101,7 @@ func (a *TypesCollector) collect(path string) error {
 							t = "unknown"
 						}
 
-						a.Structs[id].Fields[jsonName] = types.Value{
+						a.Structs[id].Fields[jsonName] = Struct{
 							Type: t,
 						}
 					}
@@ -105,7 +113,7 @@ func (a *TypesCollector) collect(path string) error {
 	return nil
 }
 
-func (a *TypesCollector) Output() (map[string]types.Value, error) {
+func (a *TypesCollector) Output() (map[string]Struct, error) {
 	return a.Structs, nil
 }
 
