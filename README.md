@@ -19,6 +19,68 @@
     ./docapi <path-to-project-source-code>
     ```
 
+## Document the API
+
+`docapi` uses comments in source code to generate the API documentation. The comments must be written in a specific format.
+
+### Meta
+
+You can add meta information to the API documentation by writing a comment in the following format:
+
+```go
+// docapi:title The API Title
+// docapi:description Your API description.
+// docapi:version 0.0.0
+```
+
+The comment can be placed anywhere in the code.
+
+### Types
+
+Types are automatically documented. You don't need to write any comment for them.
+
+## Status codes
+
+You can declare status code one time and use them in multiple handlers.
+
+To declare an error, you need to write a comment in the following format:
+
+```go
+// docapi:code 200 Success.
+// docapi:code 400 {YourErrorType} Bad request.
+```
+
+The optional `{YourErrorType}` allows you to specify the type of the error.
+
+### Routes
+
+To declare a route, you need to write a comment in the following format:
+
+```go
+// docapi:route /your/path your_unique_identifier
+```
+
+The comment can be placed anywhere in the code, but I recommend to place it next to the route declaration.
+
+### Handlers
+
+To declare a handler, you need to write a comment in the following format:
+
+```go
+// docapi:begin your_unique_identifier
+// docapi:method POST
+// docapi:summary Your handler summary
+// docapi:tags your-group
+// docapi:body YourHandlerBodyStruct
+// docapi:query the-param-name the-param-type The param description.
+// docapi:response 200 YourReturnType
+// docapi:response 400
+// docapi:response 500
+// docapi:end
+```
+
+Again, the comment can be placed anywhere in the code, but I recommend to place it next to the handler declaration.
+
 ## License
 
 `docapi` is released under the MIT License. See [LICENSE.md](./LICENSE.md).
