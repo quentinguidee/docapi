@@ -4,8 +4,8 @@ type (
 	Method string
 
 	Api struct {
-		Groups []Group                        `json:"groups"`
-		Routes map[string]map[Method]ApiRoute `json:"routes"`
+		Groups []Group    `json:"groups"`
+		Routes []ApiRoute `json:"routes"`
 	}
 
 	ApiRoute struct {
@@ -42,7 +42,6 @@ type (
 		// Statuses are the possible HTTP codes of the response.
 		Responses []Response `json:"responses"`
 	}
-
 	Response struct {
 		// Code is the HTTP code of the response.
 		Code int `json:"code"`

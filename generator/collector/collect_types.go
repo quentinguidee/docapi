@@ -46,10 +46,10 @@ func (a *TypesCollector) collect(path string) error {
 		case *ast.TypeSpec:
 			switch x.Type.(type) {
 			case *ast.StructType:
-				id := file.Name.Name + "." + x.Name.Name
+				id := x.Name.Name
 				a.Structs[id] = types.Value{
 					Type:   "object",
-					Fields: map[string]interface{}{},
+					Fields: map[string]types.Value{},
 				}
 				for _, field := range x.Type.(*ast.StructType).Fields.List {
 					tag := field.Tag
@@ -82,12 +82,9 @@ func (a *TypesCollector) collect(path string) error {
 						case *ast.BasicLit:
 							t = tp.(*ast.BasicLit).Value
 						case *ast.SelectorExpr:
-							t = tp.(*ast.SelectorExpr).X.(*ast.Ident).Name + "." + tp.(*ast.SelectorExpr).Sel.Name
+							t = tp.(*ast.SelectorExpr).Sel.Name
 						case *ast.Ident:
 							t = tp.(*ast.Ident).Name
-							if !isDefaultType(tp.(*ast.Ident).Name) {
-								t = file.Name.Name + "." + t
-							}
 						case *ast.ArrayType:
 							t = "array"
 						case *ast.MapType:

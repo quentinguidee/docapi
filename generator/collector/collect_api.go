@@ -34,20 +34,17 @@ func NewAPICollector() *ApiCollector {
 	}
 }
 
-func (a *ApiCollector) Output() (interface{}, error) {
+func (a *ApiCollector) Output() (types.Api, error) {
 	api := types.Api{
 		Groups: a.Groups,
-		Routes: map[string]map[types.Method]types.ApiRoute{},
+		Routes: []types.ApiRoute{},
 	}
 	for _, route := range a.Routes {
 		r := types.ApiRoute{
 			Route:   route,
 			Handler: a.Handlers[route.HandlerID],
 		}
-		if api.Routes[route.Path] == nil {
-			api.Routes[route.Path] = map[types.Method]types.ApiRoute{}
-		}
-		api.Routes[route.Path][types.Method(r.Handler.Method)] = r
+		api.Routes = append(api.Routes, r)
 	}
 	return api, nil
 }
@@ -98,10 +95,6 @@ func (a *ApiCollector) parse(line string) error {
 		return a.method(args)
 	case strings.HasPrefix(line, "summary"):
 		return a.summary(args)
-	case strings.HasPrefix(line, "consumes"):
-		return a.consumes(args)
-	case strings.HasPrefix(line, "produces"):
-		return a.produces(args)
 	case strings.HasPrefix(line, "response"):
 		return a.response(args)
 	case strings.HasPrefix(line, "end"):
@@ -155,22 +148,6 @@ func (a *ApiCollector) summary(args []string) error {
 		return ErrInvalidNumberOfArguments
 	}
 	a.currentHandler.Summary = strings.Join(args, " ")
-	return nil
-}
-
-func (a *ApiCollector) consumes(args []string) error {
-	if len(args) != 1 {
-		return ErrInvalidNumberOfArguments
-	}
-	a.currentHandler.Consumes = args[0]
-	return nil
-}
-
-func (a *ApiCollector) produces(args []string) error {
-	if len(args) != 1 {
-		return ErrInvalidNumberOfArguments
-	}
-	a.currentHandler.Produces = args[0]
 	return nil
 }
 

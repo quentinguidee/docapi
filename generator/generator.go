@@ -3,8 +3,12 @@ package generator
 import (
 	"docapi/generator/collector"
 	"docapi/types"
-	"encoding/json"
 )
+
+type IntermediateGen struct {
+	Api   types.Api
+	Types map[string]types.Value
+}
 
 type Generator struct {
 	api   *collector.ApiCollector
@@ -15,39 +19,38 @@ func New() *Generator {
 	return &Generator{}
 }
 
-func (g *Generator) Run(path string) (string, error) {
+func (g *Generator) Run(path string) (IntermediateGen, error) {
 	apiCollector := collector.NewAPICollector()
 	err := apiCollector.Run(path)
 	if err != nil {
-		return "", err
+		return IntermediateGen{}, err
 	}
 	g.api = apiCollector
 
 	typesCollector := collector.NewTypesCollector()
 	err = typesCollector.Run(path)
 	if err != nil {
-		return "", err
+		return IntermediateGen{}, err
 	}
 	g.types = typesCollector
 
 	return g.Output()
 }
 
-func (g *Generator) Output() (string, error) {
-	out := struct {
-		Api   interface{} `json:"api"`
-		Types interface{} `json:"types"`
-	}{}
+func (g *Generator) Output() (IntermediateGen, error) {
+	out := IntermediateGen{
+		Types: map[string]types.Value{},
+	}
 
 	apis, err := g.api.Output()
 	if err != nil {
-		return "", err
+		return IntermediateGen{}, err
 	}
 	out.Api = apis
 
 	allTypes, err := g.types.Output()
 	if err != nil {
-		return "", err
+		return IntermediateGen{}, err
 	}
 
 	keptTypes := map[string]types.Value{}
@@ -59,7 +62,5 @@ func (g *Generator) Output() (string, error) {
 		}
 	}
 	out.Types = keptTypes
-
-	s, err := json.MarshalIndent(out, "", "  ")
-	return string(s), err
+	return out, err
 }
