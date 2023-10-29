@@ -8,7 +8,7 @@ import (
 func main() {
 	args := os.Args[1:]
 	if len(args) != 1 {
-		println("Usage: api-doc <path/to/project>")
+		println("Usage: docapi <path/to/project>")
 		return
 	}
 
