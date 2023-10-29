@@ -2,11 +2,12 @@ package collector
 
 import (
 	"bufio"
-	"docapi/types"
 	"errors"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/quentinguidee/docapi/types"
 )
 
 var (

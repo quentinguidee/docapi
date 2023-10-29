@@ -1,8 +1,9 @@
 package main
 
 import (
-	"docapi/format"
 	"os"
+
+	"github.com/quentinguidee/docapi/format"
 )
 
 func main() {

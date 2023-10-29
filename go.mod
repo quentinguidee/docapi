@@ -1,4 +1,4 @@
-module docapi
+module github.com/quentinguidee/docapi
 
 go 1.21
 

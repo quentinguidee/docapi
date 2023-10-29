@@ -1,12 +1,13 @@
 package format
 
 import (
-	"docapi/collector"
-	"docapi/types"
 	"fmt"
 	"os"
 	"slices"
 	"strings"
+
+	"github.com/quentinguidee/docapi/collector"
+	"github.com/quentinguidee/docapi/types"
 
 	"gopkg.in/yaml.v3"
 )
