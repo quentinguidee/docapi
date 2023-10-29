@@ -13,11 +13,10 @@ func main() {
 	}
 
 	gen := generator.New()
-	err := gen.Run(args[0])
+	out, err := gen.Run(args[0])
 	if err != nil {
-		println(err.Error())
 		return
 	}
 
-	println(gen.Output())
+	println(out)
 }

@@ -1,9 +1,8 @@
-package generator
+package collector
 
 import (
 	"bufio"
 	"docapi/types"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
@@ -17,7 +16,7 @@ var (
 	ErrInvalidCommand           = errors.New("invalid command")
 )
 
-type apiTemp struct {
+type ApiCollector struct {
 	// Groups are the http groups of the API.
 	Groups []types.Group
 	// Routes are the http routes of the API.
@@ -29,50 +28,37 @@ type apiTemp struct {
 	currentHandlerID string
 }
 
-type (
-	api struct {
-		Groups []types.Group `json:"groups"`
-		Routes []apiRoute    `json:"routes"`
-	}
-
-	apiRoute struct {
-		types.Route
-		types.Handler
-	}
-)
-
-func newAPI() *apiTemp {
-	return &apiTemp{
+func NewAPICollector() *ApiCollector {
+	return &ApiCollector{
 		Handlers: make(map[string]types.Handler),
 	}
 }
 
-func (a *apiTemp) Output() (string, error) {
-	export := api{
+func (a *ApiCollector) Output() (interface{}, error) {
+	api := types.Api{
 		Groups: a.Groups,
-		Routes: make([]apiRoute, 0),
+		Routes: map[string]map[types.Method]types.ApiRoute{},
 	}
 	for _, route := range a.Routes {
-		export.Routes = append(export.Routes, apiRoute{
+		r := types.ApiRoute{
 			Route:   route,
 			Handler: a.Handlers[route.HandlerID],
-		})
+		}
+		if api.Routes[route.Path] == nil {
+			api.Routes[route.Path] = map[types.Method]types.ApiRoute{}
+		}
+		api.Routes[route.Path][types.Method(r.Handler.Method)] = r
 	}
-
-	doc, err := json.MarshalIndent(export, "", "  ")
-	if err != nil {
-		return "", err
-	}
-	return string(doc), nil
+	return api, nil
 }
 
-func (a *apiTemp) walk(path string) error {
+func (a *ApiCollector) Run(path string) error {
 	return filepath.Walk(path, func(path string, info os.FileInfo, err error) error {
 		return a.collect(path)
 	})
 }
 
-func (a *apiTemp) collect(path string) error {
+func (a *ApiCollector) collect(path string) error {
 	file, err := os.Open(path)
 	if err != nil {
 		return err
@@ -88,7 +74,7 @@ func (a *apiTemp) collect(path string) error {
 	return nil
 }
 
-func (a *apiTemp) parse(line string) error {
+func (a *ApiCollector) parse(line string) error {
 	line = strings.TrimSpace(line)
 
 	if !strings.HasPrefix(line, "// docapi:") {
@@ -116,8 +102,8 @@ func (a *apiTemp) parse(line string) error {
 		return a.consumes(args)
 	case strings.HasPrefix(line, "produces"):
 		return a.produces(args)
-	case strings.HasPrefix(line, "status"):
-		return a.status(args)
+	case strings.HasPrefix(line, "response"):
+		return a.response(args)
 	case strings.HasPrefix(line, "end"):
 		return a.end()
 	default:
@@ -126,7 +112,7 @@ func (a *apiTemp) parse(line string) error {
 	}
 }
 
-func (a *apiTemp) group(args []string) error {
+func (a *ApiCollector) group(args []string) error {
 	if len(args) != 1 {
 		return ErrInvalidNumberOfArguments
 	}
@@ -136,7 +122,7 @@ func (a *apiTemp) group(args []string) error {
 	return nil
 }
 
-func (a *apiTemp) route(args []string) error {
+func (a *ApiCollector) route(args []string) error {
 	if len(args) != 2 {
 		return ErrInvalidNumberOfArguments
 	}
@@ -147,7 +133,7 @@ func (a *apiTemp) route(args []string) error {
 	return nil
 }
 
-func (a *apiTemp) begin(args []string) error {
+func (a *ApiCollector) begin(args []string) error {
 	if len(args) != 1 {
 		return ErrInvalidNumberOfArguments
 	}
@@ -156,7 +142,7 @@ func (a *apiTemp) begin(args []string) error {
 	return nil
 }
 
-func (a *apiTemp) method(args []string) error {
+func (a *ApiCollector) method(args []string) error {
 	if len(args) != 1 {
 		return ErrInvalidNumberOfArguments
 	}
@@ -164,7 +150,7 @@ func (a *apiTemp) method(args []string) error {
 	return nil
 }
 
-func (a *apiTemp) summary(args []string) error {
+func (a *ApiCollector) summary(args []string) error {
 	if len(args) < 1 {
 		return ErrInvalidNumberOfArguments
 	}
@@ -172,7 +158,7 @@ func (a *apiTemp) summary(args []string) error {
 	return nil
 }
 
-func (a *apiTemp) consumes(args []string) error {
+func (a *ApiCollector) consumes(args []string) error {
 	if len(args) != 1 {
 		return ErrInvalidNumberOfArguments
 	}
@@ -180,7 +166,7 @@ func (a *apiTemp) consumes(args []string) error {
 	return nil
 }
 
-func (a *apiTemp) produces(args []string) error {
+func (a *ApiCollector) produces(args []string) error {
 	if len(args) != 1 {
 		return ErrInvalidNumberOfArguments
 	}
@@ -188,19 +174,31 @@ func (a *apiTemp) produces(args []string) error {
 	return nil
 }
 
-func (a *apiTemp) status(args []string) error {
-	if len(args) != 1 {
+func (a *ApiCollector) response(args []string) error {
+	if len(args) < 1 {
 		return ErrInvalidNumberOfArguments
 	}
 	status, err := strconv.Atoi(args[0])
 	if err != nil {
 		return err
 	}
-	a.currentHandler.Status = append(a.currentHandler.Status, status)
+	res := types.Response{
+		Code: status,
+	}
+	if len(args) > 1 {
+		t := args[1]
+		if strings.HasPrefix(t, "[]") {
+			res.Type = "array"
+			res.Ref = t[2:]
+		} else {
+			res.Type = t
+		}
+	}
+	a.currentHandler.Responses = append(a.currentHandler.Responses, res)
 	return nil
 }
 
-func (a *apiTemp) end() error {
+func (a *ApiCollector) end() error {
 	a.Handlers[a.currentHandlerID] = a.currentHandler
 	return nil
 }
