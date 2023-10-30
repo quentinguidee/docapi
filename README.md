@@ -71,9 +71,9 @@ To declare a handler, you need to write a comment in the following format:
 // docapi:method POST
 // docapi:summary Your handler summary
 // docapi:tags your-group
-// docapi:body YourHandlerBodyStruct
-// docapi:query the-param-name the-param-type The param description.
-// docapi:response 200 YourReturnType
+// docapi:body {YourHandlerBodyStruct} Your handler body description.
+// docapi:query the-param-name {TheParamType} The param description.
+// docapi:response 200 {YourResponseType} The response description.
 // docapi:response 400
 // docapi:response 500
 // docapi:end
