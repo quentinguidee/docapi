@@ -295,8 +295,9 @@ func (a *api) LinkResponses() error {
 				if resp.Ref != "" || resp.Description != "" {
 					continue
 				}
-				r := a.Components.Responses[code]
-				a.Paths[path][method].Responses[code] = r
+				a.Paths[path][method].Responses[code] = types.FormatResponse{
+					Ref: fmt.Sprintf("#/components/responses/%s", code),
+				}
 			}
 		}
 	}
