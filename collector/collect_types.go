@@ -19,15 +19,19 @@ type Struct struct {
 type TypesCollector struct {
 	// Structs are all the structs found in the project.
 	Structs map[string]Struct
+	// Aliases are all the aliases found in the project.
+	// e.g. type MyString string
+	Aliases map[string]string
 }
 
 func NewTypesCollector() *TypesCollector {
 	return &TypesCollector{
 		Structs: map[string]Struct{},
+		Aliases: map[string]string{},
 	}
 }
 
-func (a *TypesCollector) Run(path string) (map[string]Struct, error) {
+func (a *TypesCollector) Run(path string) (map[string]Struct, map[string]string, error) {
 	err := filepath.Walk(path, func(path string, info os.FileInfo, err error) error {
 		if info.IsDir() {
 			return nil
@@ -38,9 +42,9 @@ func (a *TypesCollector) Run(path string) (map[string]Struct, error) {
 		return a.collect(path)
 	})
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	return a.Structs, nil
+	return a.Structs, a.Aliases, nil
 }
 
 func (a *TypesCollector) collect(path string) error {
@@ -53,6 +57,8 @@ func (a *TypesCollector) collect(path string) error {
 		switch x := n.(type) {
 		case *ast.TypeSpec:
 			switch x.Type.(type) {
+			case *ast.Ident:
+				a.Aliases[x.Name.Name] = x.Type.(*ast.Ident).Name
 			case *ast.StructType:
 				id := x.Name.Name
 				a.Structs[id] = Struct{

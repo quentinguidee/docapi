@@ -79,6 +79,7 @@ func (f *OpenAPI) CollectCommands(path string) error {
 			tempHandler = types.FormatRoute{}
 			tempHandlerID = cmd.Args[0]
 		case types.CmdMethod:
+			println(cmd.Args[0], tempHandlerID)
 			handlerMethods[tempHandlerID] = strings.ToLower(cmd.Args[0])
 		case types.CmdSummary:
 			tempHandler.Summary = strings.Join(cmd.Args, " ")
@@ -100,7 +101,8 @@ func (f *OpenAPI) CollectCommands(path string) error {
 		if f.Paths[route] == nil {
 			f.Paths[route] = types.FormatRoutes{}
 		}
-		f.Paths[route][handlerMethods[handlerID]] = handlers[handlerID]
+		method := handlerMethods[handlerID]
+		f.Paths[route][method] = handlers[handlerID]
 	}
 
 	return nil
@@ -187,7 +189,7 @@ func (f *OpenAPI) collectResponse(tempHandler *types.FormatRoute, cmd types.Comm
 }
 
 func (f *OpenAPI) CollectComponents(path string) error {
-	tps, err := collector.NewTypesCollector().Run(path)
+	structs, aliases, err := collector.NewTypesCollector().Run(path)
 	if err != nil {
 		return err
 	}
@@ -198,12 +200,22 @@ func (f *OpenAPI) CollectComponents(path string) error {
 		referencedSchemas := slices.Clone(f.referencedSchemas)
 		f.referencedSchemas = []string{}
 
-		for tpName, tp := range tps {
-			if !slices.Contains(referencedSchemas, tpName) {
+		for structName, s := range structs {
+			if !slices.Contains(referencedSchemas, structName) {
 				continue
 			}
-			f.Components.SetSchema(tpName, f.createSchema(tp))
+			f.Components.SetSchema(structName, f.schemaFromStruct(s))
 		}
+
+		for aliasName, alias := range aliases {
+			if !slices.Contains(referencedSchemas, aliasName) {
+				continue
+			}
+			f.Components.SetSchema(aliasName, types.FormatSchema{
+				Type: alias,
+			})
+		}
+
 		it += 1
 		if it > 100 {
 			return fmt.Errorf("too many iterations")
@@ -228,25 +240,31 @@ func (f *OpenAPI) LinkResponses() error {
 	return nil
 }
 
-func (f *OpenAPI) createSchema(tp collector.Struct) types.FormatSchema {
+func (f *OpenAPI) schemaFromStruct(tp collector.Struct) types.FormatSchema {
 	schema := types.FormatSchema{
 		Type: tp.Type,
 	}
 	for fieldName, field := range tp.Fields {
-		var s types.FormatSchema
-		if isDefaultType(field.Type) {
-			s = types.FormatSchema{
-				Type: field.Type,
-			}
-		} else {
-			s = types.FormatSchema{
-				Ref: fmt.Sprintf("#/components/schemas/%s", field.Type),
-			}
-			f.referencedSchemas = append(f.referencedSchemas, field.Type)
-		}
-		schema.SetProperty(fieldName, s)
+		schema.SetProperty(fieldName, f.schemaFromAlias(field.Type))
 	}
 	return schema
+}
+
+func (f *OpenAPI) schemaFromAlias(name string) types.FormatSchema {
+	if isDefaultType(name) {
+		if name == "bool" {
+			name = "boolean"
+		}
+		return types.FormatSchema{
+			Type: name,
+		}
+	} else {
+		s := types.FormatSchema{
+			Ref: fmt.Sprintf("#/components/schemas/%s", name),
+		}
+		f.referencedSchemas = append(f.referencedSchemas, name)
+		return s
+	}
 }
 
 func isDefaultType(name string) bool {
