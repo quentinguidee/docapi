@@ -23,7 +23,6 @@ type api struct {
 	referencedSchemas []string
 	routes            map[string]string
 	tempHandler       types.FormatRoute
-	tempHandlerID     string
 }
 
 func newServer() *api {
@@ -127,10 +126,11 @@ func (f *OpenAPI) CollectCommands(path string) error {
 			case types.CmdRoute:
 				a.routes[cmd.Args[1]] = cmd.Args[0]
 			case types.CmdBegin:
-				a.tempHandler = types.FormatRoute{}
-				a.tempHandlerID = cmd.Args[0]
+				a.tempHandler = types.FormatRoute{
+					OperationId: cmd.Args[0],
+				}
 			case types.CmdMethod:
-				handlerMethods[a.tempHandlerID] = strings.ToLower(cmd.Args[0])
+				handlerMethods[a.tempHandler.OperationId] = strings.ToLower(cmd.Args[0])
 			case types.CmdSummary:
 				a.tempHandler.Summary = strings.Join(cmd.Args, " ")
 			case types.CmdTags:
@@ -142,7 +142,7 @@ func (f *OpenAPI) CollectCommands(path string) error {
 			case types.CmdResponse:
 				a.collectResponse(&a.tempHandler, cmd)
 			case types.CmdEnd:
-				handlers[a.tempHandlerID] = a.tempHandler
+				handlers[a.tempHandler.OperationId] = a.tempHandler
 			}
 		}
 	}

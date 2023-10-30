@@ -29,6 +29,7 @@ type (
 	FormatRoutes map[string]FormatRoute
 
 	FormatRoute struct {
+		OperationId string                    `json:"operationId,omitempty" yaml:"operationId,omitempty"`
 		Summary     string                    `json:"summary,omitempty" yaml:"summary,omitempty"`
 		Tags        []string                  `json:"tags,omitempty" yaml:"tags,omitempty"`
 		Description string                    `json:"description,omitempty" yaml:"description,omitempty"`
