@@ -65,3 +65,35 @@ type (
 		Schemas   map[string]FormatSchema   `json:"schemas,omitempty" yaml:"schemas,omitempty"`
 	}
 )
+
+func (f *FormatRoute) SetResponse(code string, resp FormatResponse) {
+	if f.Responses == nil {
+		f.Responses = map[string]FormatResponse{}
+	}
+	f.Responses[code] = resp
+}
+
+func (f *FormatRoute) AddParameter(param FormatParameter) {
+	f.Parameters = append(f.Parameters, param)
+}
+
+func (f *FormatSchema) SetProperty(name string, schema FormatSchema) {
+	if f.Properties == nil {
+		f.Properties = map[string]FormatSchema{}
+	}
+	f.Properties[name] = schema
+}
+
+func (f *FormatComponents) SetResponse(code string, resp FormatResponse) {
+	if f.Responses == nil {
+		f.Responses = map[string]FormatResponse{}
+	}
+	f.Responses[code] = resp
+}
+
+func (f *FormatComponents) SetSchema(name string, schema FormatSchema) {
+	if f.Schemas == nil {
+		f.Schemas = map[string]FormatSchema{}
+	}
+	f.Schemas[name] = schema
+}
