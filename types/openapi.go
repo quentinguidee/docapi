@@ -32,7 +32,6 @@ type (
 		Summary     string                    `json:"summary,omitempty" yaml:"summary,omitempty"`
 		Tags        []string                  `json:"tags,omitempty" yaml:"tags,omitempty"`
 		Description string                    `json:"description,omitempty" yaml:"description,omitempty"`
-		Servers     []FormatServer            `json:"servers,omitempty" yaml:"servers,omitempty"`
 		Parameters  []FormatParameter         `json:"parameters,omitempty" yaml:"parameters,omitempty"`
 		RequestBody FormatRequestBody         `json:"requestBody,omitempty" yaml:"requestBody,omitempty"`
 		Responses   map[string]FormatResponse `json:"responses" yaml:"responses"`
@@ -95,10 +94,6 @@ func (f *FormatRoute) SetResponse(code string, resp FormatResponse) {
 		f.Responses = map[string]FormatResponse{}
 	}
 	f.Responses[code] = resp
-}
-
-func (f *FormatRoute) AddServer(server FormatServer) {
-	f.Servers = append(f.Servers, server)
 }
 
 func (f *FormatRoute) AddParameter(param FormatParameter) {

@@ -6,6 +6,7 @@ var (
 	CmdTitle       CommandType = "title"
 	CmdDescription CommandType = "description"
 	CmdVersion     CommandType = "version"
+	CmdFilename    CommandType = "filename"
 	CmdUrl         CommandType = "url"
 	CmdUrlVar      CommandType = "urlvar"
 	CmdCode        CommandType = "code"
