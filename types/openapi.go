@@ -10,9 +10,9 @@ type (
 	}
 
 	FormatInfo struct {
-		Title   string `json:"title" yaml:"title"`
-		Desc    string `json:"description" yaml:"description"`
-		Version string `json:"version" yaml:"version"`
+		Title       string `json:"title" yaml:"title"`
+		Description string `json:"description" yaml:"description"`
+		Version     string `json:"version" yaml:"version"`
 	}
 
 	FormatServer struct {

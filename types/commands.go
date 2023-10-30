@@ -21,6 +21,27 @@ var (
 	CmdEnd         CommandType = "end"
 )
 
+type CommandsVisitor interface {
+	Visit(cmd Command) error
+
+	visitTitle(cmd Command)
+	visitDescription(cmd Command)
+	visitVersion(cmd Command)
+	visitFilename(cmd Command)
+	visitUrl(cmd Command)
+	visitUrlVar(cmd Command)
+	visitCode(cmd Command)
+	visitRoute(cmd Command)
+	visitBegin(cmd Command)
+	visitMethod(cmd Command)
+	visitSummary(cmd Command)
+	visitTags(cmd Command)
+	visitBody(cmd Command)
+	visitQuery(cmd Command)
+	visitResponse(cmd Command)
+	visitEnd(cmd Command)
+}
+
 type Command struct {
 	Type CommandType
 	Args []string
