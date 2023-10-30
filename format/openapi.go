@@ -79,7 +79,6 @@ func (f *OpenAPI) CollectCommands(path string) error {
 			tempHandler = types.FormatRoute{}
 			tempHandlerID = cmd.Args[0]
 		case types.CmdMethod:
-			println(cmd.Args[0], tempHandlerID)
 			handlerMethods[tempHandlerID] = strings.ToLower(cmd.Args[0])
 		case types.CmdSummary:
 			tempHandler.Summary = strings.Join(cmd.Args, " ")
@@ -131,6 +130,7 @@ func (f *OpenAPI) collectCode(cmd types.Command) {
 
 func (f *OpenAPI) collectBody(tempHandler *types.FormatRoute, cmd types.Command) {
 	component := cmd.Args[0]
+	component = component[1 : len(component)-1]
 	description := cmd.Args[1:]
 
 	tempHandler.RequestBody = types.FormatRequestBody{
@@ -149,14 +149,15 @@ func (f *OpenAPI) collectBody(tempHandler *types.FormatRoute, cmd types.Command)
 }
 
 func (f *OpenAPI) collectQuery(tempHandler *types.FormatRoute, cmd types.Command) {
+	component := cmd.Args[1]
+	component = component[1 : len(component)-1]
+	schema := f.schemaFromAlias(component)
 	tempHandler.AddParameter(types.FormatParameter{
 		In:          "query",
 		Name:        cmd.Args[0],
 		Description: strings.Join(cmd.Args[2:], " "),
 		Required:    true,
-		Schema: types.FormatSchema{
-			Type: cmd.Args[1],
-		},
+		Schema:      schema,
 	})
 }
 
@@ -173,6 +174,7 @@ func (f *OpenAPI) collectResponse(tempHandler *types.FormatRoute, cmd types.Comm
 
 	content := types.FormatContent{}
 	component := cmd.Args[1]
+	component = component[1 : len(component)-1]
 	if strings.HasPrefix(component, "[]") {
 		component = component[2:]
 		content.Schema.Type = "array"
