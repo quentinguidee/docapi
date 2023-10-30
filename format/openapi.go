@@ -16,6 +16,7 @@ type OpenAPI struct {
 	types.Format
 	path              string
 	referencedSchemas []string
+	servers           map[string]*types.FormatServer
 }
 
 func NewOpenAPI(path string) *OpenAPI {
@@ -23,7 +24,8 @@ func NewOpenAPI(path string) *OpenAPI {
 		Format: types.Format{
 			Openapi: "3.0.0",
 		},
-		path: path,
+		path:    path,
+		servers: map[string]*types.FormatServer{},
 	}
 }
 
@@ -59,6 +61,7 @@ func (f *OpenAPI) CollectCommands(path string) error {
 	handlers := map[string]types.FormatRoute{}
 	handlerMethods := map[string]string{}
 	routes := map[string]string{}
+	routeAliases := map[string]string{}
 
 	var tempHandler types.FormatRoute
 	var tempHandlerID string
@@ -71,10 +74,17 @@ func (f *OpenAPI) CollectCommands(path string) error {
 			f.Info.Desc = strings.Join(cmd.Args, " ")
 		case types.CmdVersion:
 			f.Info.Version = cmd.Args[0]
+		case types.CmdUrl:
+			f.collectUrl(cmd.Args)
+		case types.CmdUrlVar:
+			f.collectUrlVar(cmd.Args)
 		case types.CmdCode:
 			f.collectCode(cmd)
 		case types.CmdRoute:
 			routes[cmd.Args[1]] = cmd.Args[0]
+			if cmd.ServerAlias != "" {
+				routeAliases[cmd.Args[1]] = cmd.ServerAlias
+			}
 		case types.CmdBegin:
 			tempHandler = types.FormatRoute{}
 			tempHandlerID = cmd.Args[0]
@@ -101,10 +111,23 @@ func (f *OpenAPI) CollectCommands(path string) error {
 			f.Paths[route] = types.FormatRoutes{}
 		}
 		method := handlerMethods[handlerID]
-		f.Paths[route][method] = handlers[handlerID]
+		alias := routeAliases[handlerID]
+		handler := handlers[handlerID]
+		if alias != "" {
+			handler.AddServer(*f.servers[alias])
+		}
+		f.Paths[route][method] = handler
 	}
 
 	return nil
+}
+
+func (f *OpenAPI) collectUrl(args []string) {
+	server := types.FormatServer{
+		Url: args[1],
+	}
+	f.AddServer(server)
+	f.servers[args[0]] = &server
 }
 
 func (f *OpenAPI) collectCode(cmd types.Command) {
@@ -266,6 +289,32 @@ func (f *OpenAPI) schemaFromAlias(name string) types.FormatSchema {
 		}
 		f.referencedSchemas = append(f.referencedSchemas, name)
 		return s
+	}
+}
+
+func (f *OpenAPI) collectUrlVar(args []string) {
+	var (
+		alias        = args[0]
+		name         = args[1]
+		defaultValue = args[2]
+		description  = strings.Join(args[3:], " ")
+	)
+
+	v := types.FormatServerVariable{
+		Default:     defaultValue,
+		Description: description,
+	}
+
+	if f.servers == nil {
+		f.servers = map[string]*types.FormatServer{}
+	}
+	server := f.servers[alias]
+	server.SetVariable(name, v)
+	for i, s := range f.Servers {
+		if s.Url == server.Url {
+			f.Servers[i] = *server
+			break
+		}
 	}
 }
 

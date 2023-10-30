@@ -52,15 +52,23 @@ func (a *CommandsCollector) collect(path string) error {
 func (a *CommandsCollector) parse(line string) error {
 	line = strings.TrimSpace(line)
 
-	if !strings.HasPrefix(line, "// docapi:") {
+	if !strings.HasPrefix(line, "// docapi") {
 		return nil
 	}
-
-	line = strings.TrimSpace(line[10:])
+	line = strings.TrimPrefix(line, "// docapi")
+	line = strings.TrimSpace(line)
 	args := strings.Split(line, " ")
+
+	var alias string
+	if strings.HasPrefix(args[0], ":") {
+		alias = args[0][1:]
+		args = args[1:]
+	}
+
 	a.Commands = append(a.Commands, types.Command{
-		Type: types.CommandType(args[0]),
-		Args: args[1:],
+		Type:        types.CommandType(args[0]),
+		Args:        args[1:],
+		ServerAlias: alias,
 	})
 	return nil
 }

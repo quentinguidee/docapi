@@ -4,6 +4,7 @@ type (
 	Format struct {
 		Openapi    string                  `json:"openapi" yaml:"openapi"`
 		Info       FormatInfo              `json:"info" yaml:"info"`
+		Servers    []FormatServer          `json:"servers,omitempty" yaml:"servers,omitempty"`
 		Paths      map[string]FormatRoutes `json:"paths,omitempty" yaml:"paths,omitempty"`
 		Components FormatComponents        `json:"components,omitempty" yaml:"components,omitempty"`
 	}
@@ -14,12 +15,24 @@ type (
 		Version string `json:"version" yaml:"version"`
 	}
 
+	FormatServer struct {
+		Url         string                          `json:"url" yaml:"url"`
+		Description string                          `json:"description,omitempty" yaml:"description,omitempty"`
+		Variables   map[string]FormatServerVariable `json:"variables,omitempty" yaml:"variables,omitempty"`
+	}
+
+	FormatServerVariable struct {
+		Default     string `json:"default" yaml:"default"`
+		Description string `json:"description,omitempty" yaml:"description,omitempty"`
+	}
+
 	FormatRoutes map[string]FormatRoute
 
 	FormatRoute struct {
 		Summary     string                    `json:"summary,omitempty" yaml:"summary,omitempty"`
 		Tags        []string                  `json:"tags,omitempty" yaml:"tags,omitempty"`
 		Description string                    `json:"description,omitempty" yaml:"description,omitempty"`
+		Servers     []FormatServer            `json:"servers,omitempty" yaml:"servers,omitempty"`
 		Parameters  []FormatParameter         `json:"parameters,omitempty" yaml:"parameters,omitempty"`
 		RequestBody FormatRequestBody         `json:"requestBody,omitempty" yaml:"requestBody,omitempty"`
 		Responses   map[string]FormatResponse `json:"responses" yaml:"responses"`
@@ -66,11 +79,26 @@ type (
 	}
 )
 
+func (f *Format) AddServer(server FormatServer) {
+	f.Servers = append(f.Servers, server)
+}
+
+func (f *FormatServer) SetVariable(name string, variable FormatServerVariable) {
+	if f.Variables == nil {
+		f.Variables = map[string]FormatServerVariable{}
+	}
+	f.Variables[name] = variable
+}
+
 func (f *FormatRoute) SetResponse(code string, resp FormatResponse) {
 	if f.Responses == nil {
 		f.Responses = map[string]FormatResponse{}
 	}
 	f.Responses[code] = resp
+}
+
+func (f *FormatRoute) AddServer(server FormatServer) {
+	f.Servers = append(f.Servers, server)
 }
 
 func (f *FormatRoute) AddParameter(param FormatParameter) {

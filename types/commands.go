@@ -6,6 +6,8 @@ var (
 	CmdTitle       CommandType = "title"
 	CmdDescription CommandType = "description"
 	CmdVersion     CommandType = "version"
+	CmdUrl         CommandType = "url"
+	CmdUrlVar      CommandType = "urlvar"
 	CmdCode        CommandType = "code"
 	CmdRoute       CommandType = "route"
 	CmdBegin       CommandType = "begin"
@@ -21,4 +23,7 @@ var (
 type Command struct {
 	Type CommandType
 	Args []string
+
+	// ServerAlias allows executing this command only for a specific server.
+	ServerAlias string
 }
