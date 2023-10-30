@@ -144,7 +144,7 @@ func (f *OpenAPI) CollectCommands(path string) error {
 					}
 					f.referencedSchemas = append(f.referencedSchemas, component)
 				} else {
-					content.Schema.Ref = cmd.Args[1]
+					content.Schema.Ref = fmt.Sprintf("#/components/schemas/%s", cmd.Args[1])
 				}
 				resp.Content = map[string]types.FormatContent{}
 				resp.Content["application/json"] = content
