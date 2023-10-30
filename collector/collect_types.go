@@ -116,15 +116,3 @@ func (a *TypesCollector) collect(path string) error {
 func (a *TypesCollector) Output() (map[string]Struct, error) {
 	return a.Structs, nil
 }
-
-func isDefaultType(name string) bool {
-	switch name {
-	case "int", "int8", "int16", "int32", "int64",
-		"uint", "uint8", "uint16", "uint32", "uint64", "uintptr",
-		"float32", "float64", "complex64", "complex128",
-		"string", "bool", "byte", "rune":
-		return true
-	default:
-		return false
-	}
-}

@@ -128,18 +128,22 @@ func (f *OpenAPI) collectCode(cmd types.Command) {
 }
 
 func (f *OpenAPI) collectBody(tempHandler *types.FormatRoute, cmd types.Command) {
+	component := cmd.Args[0]
+	description := cmd.Args[1:]
+
 	tempHandler.RequestBody = types.FormatRequestBody{
-		Description: strings.Join(cmd.Args[1:], " "),
+		Description: strings.Join(description, " "),
 		Required:    true,
 		Content: map[string]types.FormatContent{
 			"application/json": {
 				Schema: types.FormatSchema{
-					Ref: fmt.Sprintf("#/components/schemas/%s", cmd.Args[0]),
+					Ref: fmt.Sprintf("#/components/schemas/%s", component),
 				},
 			},
 		},
 	}
-	f.referencedSchemas = append(f.referencedSchemas, cmd.Args[0])
+
+	f.referencedSchemas = append(f.referencedSchemas, component)
 }
 
 func (f *OpenAPI) collectQuery(tempHandler *types.FormatRoute, cmd types.Command) {
@@ -188,19 +192,22 @@ func (f *OpenAPI) CollectComponents(path string) error {
 		return err
 	}
 
-	for tpName, tp := range tps {
-		if !slices.Contains(f.referencedSchemas, tpName) {
-			continue
+	it := 0
+	// The loop handles the case where a schema references another schema.
+	for len(f.referencedSchemas) > 0 {
+		referencedSchemas := slices.Clone(f.referencedSchemas)
+		f.referencedSchemas = []string{}
+
+		for tpName, tp := range tps {
+			if !slices.Contains(referencedSchemas, tpName) {
+				continue
+			}
+			f.Components.SetSchema(tpName, f.createSchema(tp))
 		}
-		schema := types.FormatSchema{
-			Type: tp.Type,
+		it += 1
+		if it > 100 {
+			return fmt.Errorf("too many iterations")
 		}
-		for fieldName, field := range tp.Fields {
-			schema.SetProperty(fieldName, types.FormatSchema{
-				Type: field.Type,
-			})
-		}
-		f.Components.SetSchema(tpName, schema)
 	}
 
 	return nil
@@ -219,4 +226,37 @@ func (f *OpenAPI) LinkResponses() error {
 		}
 	}
 	return nil
+}
+
+func (f *OpenAPI) createSchema(tp collector.Struct) types.FormatSchema {
+	schema := types.FormatSchema{
+		Type: tp.Type,
+	}
+	for fieldName, field := range tp.Fields {
+		var s types.FormatSchema
+		if isDefaultType(field.Type) {
+			s = types.FormatSchema{
+				Type: field.Type,
+			}
+		} else {
+			s = types.FormatSchema{
+				Ref: fmt.Sprintf("#/components/schemas/%s", field.Type),
+			}
+			f.referencedSchemas = append(f.referencedSchemas, field.Type)
+		}
+		schema.SetProperty(fieldName, s)
+	}
+	return schema
+}
+
+func isDefaultType(name string) bool {
+	switch name {
+	case "int", "int8", "int16", "int32", "int64",
+		"uint", "uint8", "uint16", "uint32", "uint64", "uintptr",
+		"float32", "float64", "complex64", "complex128",
+		"string", "bool", "byte", "rune":
+		return true
+	default:
+		return false
+	}
 }
