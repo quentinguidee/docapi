@@ -9,13 +9,12 @@ import (
 
 type api struct {
 	types.Format
-	alias             string
-	filename          string
-	referencedSchemas []string
-	routes            map[string]string
-	tempHandler       types.FormatRoute
-	handlers          map[string]types.FormatRoute
-	handlerMethods    map[string]string
+	alias          string
+	filename       string
+	routes         map[string]string
+	tempHandler    types.FormatRoute
+	handlers       map[string]types.FormatRoute
+	handlerMethods map[string]string
 }
 
 func newAPI(id string) *api {
@@ -34,15 +33,48 @@ func (a *api) LinkResponses() error {
 	for path, routes := range a.Paths {
 		for method, route := range routes {
 			for code, resp := range route.Responses {
-				if resp.Ref != "" || resp.Description != "" {
+				if resp.Ref.Name() != "" || resp.Description != "" {
 					continue
 				}
 				a.Paths[path][method].Responses[code] = types.FormatResponse{
-					Ref: fmt.Sprintf("#/components/responses/%s", code),
+					Ref: types.CreateRef(types.RefResponse, code),
 				}
 			}
 		}
 	}
+	return nil
+}
+
+func (a *api) CollectComponents(structs map[string]collector.Struct, aliases map[string]string) error {
+	it := 0
+	itComponents := a.GetReferencedComponents()
+	done := 0
+	count := len(itComponents)
+
+	// The loop handles the case where a schema references another schema.
+	for {
+		for _, comp := range itComponents {
+			if s, ok := structs[comp]; ok {
+				a.Components.SetSchema(comp, a.schemaFromStruct(s))
+			} else if alias, ok := aliases[comp]; ok {
+				a.Components.SetSchema(comp, a.schemaFromAlias(alias))
+			}
+		}
+
+		done = count
+		itComponents = a.GetReferencedComponents()
+		count = len(itComponents)
+
+		if count == done {
+			break
+		}
+
+		it += 1
+		if it > 100 {
+			return fmt.Errorf("too many iterations")
+		}
+	}
+
 	return nil
 }
 
@@ -65,11 +97,9 @@ func (a *api) schemaFromAlias(name string) types.FormatSchema {
 			Type: name,
 		}
 	} else {
-		s := types.FormatSchema{
-			Ref: fmt.Sprintf("#/components/schemas/%s", name),
+		return types.FormatSchema{
+			Ref: types.CreateRef(types.RefSchema, name),
 		}
-		a.referencedSchemas = append(a.referencedSchemas, name)
-		return s
 	}
 }
 

@@ -28,12 +28,17 @@ func (f *OpenAPI) Generate() error {
 		return err
 	}
 
-	err = f.CollectComponents(f.path)
+	structs, aliases, err := collector.NewTypesCollector().Run(f.path)
 	if err != nil {
 		return err
 	}
 
 	for _, a := range f.apis {
+		err = a.CollectComponents(structs, aliases)
+		if err != nil {
+			return err
+		}
+
 		err = a.LinkResponses()
 		if err != nil {
 			return err
@@ -62,7 +67,7 @@ func (f *OpenAPI) CollectCommands(path string) error {
 	// get all aliases
 	var aliases []string
 	for _, cmd := range commands {
-		if cmd.ServerAlias != "" {
+		if cmd.ServerAlias != "" && !slices.Contains(aliases, cmd.ServerAlias) {
 			aliases = append(aliases, cmd.ServerAlias)
 		}
 	}
@@ -95,45 +100,6 @@ func (f *OpenAPI) CollectCommands(path string) error {
 			method := a.handlerMethods[handlerID]
 			handler := a.handlers[handlerID]
 			a.Paths[route][method] = handler
-		}
-	}
-
-	return nil
-}
-
-func (f *OpenAPI) CollectComponents(path string) error {
-	structs, aliases, err := collector.NewTypesCollector().Run(path)
-	if err != nil {
-		return err
-	}
-
-	for _, a := range f.apis {
-		it := 0
-		// The loop handles the case where a schema references another schema.
-		for len(a.referencedSchemas) > 0 {
-			referencedSchemas := slices.Clone(a.referencedSchemas)
-			a.referencedSchemas = []string{}
-
-			for structName, s := range structs {
-				if !slices.Contains(referencedSchemas, structName) {
-					continue
-				}
-				a.Components.SetSchema(structName, a.schemaFromStruct(s))
-			}
-
-			for aliasName, alias := range aliases {
-				if !slices.Contains(referencedSchemas, aliasName) {
-					continue
-				}
-				a.Components.SetSchema(aliasName, types.FormatSchema{
-					Type: alias,
-				})
-			}
-
-			it += 1
-			if it > 100 {
-				return fmt.Errorf("too many iterations")
-			}
 		}
 	}
 

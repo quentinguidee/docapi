@@ -103,11 +103,10 @@ func (v *CommandsVisitor) visitCode(cmd types.Command) {
 		resp.Content = map[string]types.FormatContent{
 			"application/json": {
 				Schema: types.FormatSchema{
-					Ref: fmt.Sprintf("#/components/schemas/%s", ref),
+					Ref: types.CreateRef(types.RefSchema, ref),
 				},
 			},
 		}
-		v.api.referencedSchemas = append(v.api.referencedSchemas, ref)
 	}
 	resp.Description = strings.Join(args, " ")
 	v.api.Components.SetResponse(code, resp)
@@ -149,8 +148,6 @@ func (v *CommandsVisitor) visitBody(cmd types.Command) {
 			},
 		},
 	}
-
-	v.api.referencedSchemas = append(v.api.referencedSchemas, component)
 }
 
 func (v *CommandsVisitor) visitQuery(cmd types.Command) {
@@ -184,13 +181,11 @@ func (v *CommandsVisitor) visitResponse(cmd types.Command) {
 		component = component[2:]
 		content.Schema.Type = "array"
 		content.Schema.Items = types.FormatItems{
-			Ref: fmt.Sprintf("#/components/schemas/%s", component),
+			Ref: types.CreateRef(types.RefSchema, component),
 		}
 	} else {
-		content.Schema.Ref = fmt.Sprintf("#/components/schemas/%s", component)
+		content.Schema.Ref = types.CreateRef(types.RefSchema, component)
 	}
-	v.api.referencedSchemas = append(v.api.referencedSchemas, component)
-
 	resp.Content["application/json"] = content
 	v.api.tempHandler.SetResponse(cmd.Args[0], resp)
 }
