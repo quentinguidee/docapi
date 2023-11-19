@@ -61,6 +61,10 @@ func (a *api) CollectComponents(structs map[string]collector.Struct, aliases map
 				a.Components.SetSchema(comp, a.schemaFromAlias(alias))
 			} else if m, ok := maps[comp]; ok {
 				a.Components.SetSchema(comp, a.schemaFromMap(m))
+			} else {
+				a.Components.SetSchema(comp, types.FormatSchema{
+					Type: "string",
+				})
 			}
 		}
 
