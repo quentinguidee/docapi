@@ -98,9 +98,8 @@ func (a *api) schemaFromStruct(tp collector.Struct) types.FormatSchema {
 func (a *api) schemaFromMap(tp collector.Map) types.FormatSchema {
 	return types.FormatSchema{
 		Type: "object",
-		Properties: map[string]types.FormatSchema{
-			tp.Key:   a.schemaFromAlias(tp.Key),
-			tp.Value: a.schemaFromAlias(tp.Value),
+		AnyOf: []types.FormatSchema{
+			a.schemaFromAlias(tp.Value),
 		},
 	}
 }
@@ -111,6 +110,10 @@ func (a *api) schemaFromAlias(name string) types.FormatSchema {
 		return types.FormatSchema{
 			Type:  "array",
 			Items: &child,
+		}
+	} else if name == "any" {
+		return types.FormatSchema{
+			Type: "object",
 		}
 	} else if isDefaultType(name) {
 		if name == "bool" {

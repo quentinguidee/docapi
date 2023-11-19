@@ -78,6 +78,7 @@ type (
 		Type       string                  `json:"type,omitempty" yaml:"type,omitempty"`
 		Items      *FormatSchema           `json:"items,omitempty" yaml:"items,omitempty"`
 		Properties map[string]FormatSchema `json:"properties,omitempty" yaml:"properties,omitempty"`
+		AnyOf      []FormatSchema          `json:"anyOf,omitempty" yaml:"anyOf,omitempty"`
 		Ref        Ref                     `json:"$ref,omitempty" yaml:"$ref,omitempty"`
 	}
 
