@@ -41,6 +41,8 @@ func (v *CommandsVisitor) Visit(cmd types.Command) error {
 		v.visitMethod(cmd)
 	case types.CmdSummary:
 		v.visitSummary(cmd)
+	case types.CmdDesc:
+		v.visitDesc(cmd)
 	case types.CmdTags:
 		v.visitTags(cmd)
 	case types.CmdBody:
@@ -128,6 +130,10 @@ func (v *CommandsVisitor) visitMethod(cmd types.Command) {
 
 func (v *CommandsVisitor) visitSummary(cmd types.Command) {
 	v.api.tempHandler.Summary = strings.Join(cmd.Args, " ")
+}
+
+func (v *CommandsVisitor) visitDesc(cmd types.Command) {
+	v.api.tempHandler.Description = strings.Join(cmd.Args, " ")
 }
 
 func (v *CommandsVisitor) visitTags(cmd types.Command) {
