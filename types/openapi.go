@@ -76,13 +76,9 @@ type (
 
 	FormatSchema struct {
 		Type       string                  `json:"type,omitempty" yaml:"type,omitempty"`
-		Items      FormatItems             `json:"items,omitempty" yaml:"items,omitempty"`
+		Items      *FormatSchema           `json:"items,omitempty" yaml:"items,omitempty"`
 		Properties map[string]FormatSchema `json:"properties,omitempty" yaml:"properties,omitempty"`
 		Ref        Ref                     `json:"$ref,omitempty" yaml:"$ref,omitempty"`
-	}
-
-	FormatItems struct {
-		Ref Ref `json:"$ref,omitempty" yaml:"$ref,omitempty"`
 	}
 
 	FormatComponents struct {
@@ -213,7 +209,7 @@ func (f *FormatSchema) GetReferencedComponents() []string {
 	}
 
 	var schemas []string
-	if f.Items.Ref.Name() != "" {
+	if f.Items != nil && f.Items.Ref.Name() != "" {
 		schemas = append(schemas, f.Items.Ref.Name())
 	}
 	for _, schema := range f.Properties {

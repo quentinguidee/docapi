@@ -2,6 +2,7 @@ package format
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/quentinguidee/docapi/collector"
 	"github.com/quentinguidee/docapi/types"
@@ -89,7 +90,13 @@ func (a *api) schemaFromStruct(tp collector.Struct) types.FormatSchema {
 }
 
 func (a *api) schemaFromAlias(name string) types.FormatSchema {
-	if isDefaultType(name) {
+	if strings.HasPrefix(name, "[]") {
+		child := a.schemaFromAlias(name[2:])
+		return types.FormatSchema{
+			Type:  "array",
+			Items: &child,
+		}
+	} else if isDefaultType(name) {
 		if name == "bool" {
 			name = "boolean"
 		}

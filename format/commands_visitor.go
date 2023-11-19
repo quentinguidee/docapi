@@ -183,15 +183,7 @@ func (v *CommandsVisitor) visitResponse(cmd types.Command) {
 	content := types.FormatContent{}
 	component := cmd.Args[1]
 	component = component[1 : len(component)-1]
-	if strings.HasPrefix(component, "[]") {
-		component = component[2:]
-		content.Schema.Type = "array"
-		content.Schema.Items = types.FormatItems{
-			Ref: types.CreateRef(types.RefSchema, component),
-		}
-	} else {
-		content.Schema.Ref = types.CreateRef(types.RefSchema, component)
-	}
+	content.Schema = v.api.schemaFromAlias(component)
 	resp.Content["application/json"] = content
 	v.api.tempHandler.SetResponse(cmd.Args[0], resp)
 }

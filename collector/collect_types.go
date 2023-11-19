@@ -100,7 +100,8 @@ func (a *TypesCollector) collect(path string) error {
 						case *ast.Ident:
 							t = tp.(*ast.Ident).Name
 						case *ast.ArrayType:
-							t = "array"
+							id := tp.(*ast.ArrayType).Elt.(*ast.Ident).Name
+							t = "[]" + id
 						case *ast.MapType:
 							t = "object"
 						default:
