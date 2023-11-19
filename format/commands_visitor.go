@@ -137,7 +137,7 @@ func (v *CommandsVisitor) visitDesc(cmd types.Command) {
 }
 
 func (v *CommandsVisitor) visitTags(cmd types.Command) {
-	v.api.tempHandler.Tags = cmd.Args
+	v.api.tempHandler.Tags = append(v.api.tempHandler.Tags, strings.Join(cmd.Args, " "))
 }
 
 func (v *CommandsVisitor) visitBody(cmd types.Command) {
