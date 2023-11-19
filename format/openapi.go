@@ -28,13 +28,13 @@ func (f *OpenAPI) Generate() error {
 		return err
 	}
 
-	structs, aliases, err := collector.NewTypesCollector().Run(f.path)
+	structs, aliases, maps, err := collector.NewTypesCollector().Run(f.path)
 	if err != nil {
 		return err
 	}
 
 	for _, a := range f.apis {
-		err = a.CollectComponents(structs, aliases)
+		err = a.CollectComponents(structs, aliases, maps)
 		if err != nil {
 			return err
 		}

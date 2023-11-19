@@ -16,22 +16,31 @@ type Struct struct {
 	Fields map[string]Struct
 }
 
+type Map struct {
+	Key   string
+	Value string
+}
+
 type TypesCollector struct {
 	// Structs are all the structs found in the project.
 	Structs map[string]Struct
 	// Aliases are all the aliases found in the project.
 	// e.g. type MyString string
 	Aliases map[string]string
+	// Maps are all the maps found in the project.
+	// e.g. type MyMap map[string]string
+	Maps map[string]Map
 }
 
 func NewTypesCollector() *TypesCollector {
 	return &TypesCollector{
 		Structs: map[string]Struct{},
 		Aliases: map[string]string{},
+		Maps:    map[string]Map{},
 	}
 }
 
-func (a *TypesCollector) Run(path string) (map[string]Struct, map[string]string, error) {
+func (a *TypesCollector) Run(path string) (map[string]Struct, map[string]string, map[string]Map, error) {
 	err := filepath.Walk(path, func(path string, info os.FileInfo, err error) error {
 		if info.IsDir() {
 			return nil
@@ -42,9 +51,9 @@ func (a *TypesCollector) Run(path string) (map[string]Struct, map[string]string,
 		return a.collect(path)
 	})
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
-	return a.Structs, a.Aliases, nil
+	return a.Structs, a.Aliases, a.Maps, nil
 }
 
 func (a *TypesCollector) collect(path string) error {
@@ -59,6 +68,28 @@ func (a *TypesCollector) collect(path string) error {
 			switch x.Type.(type) {
 			case *ast.Ident:
 				a.Aliases[x.Name.Name] = x.Type.(*ast.Ident).Name
+			case *ast.MapType:
+				m := x.Type.(*ast.MapType)
+				var key string
+				switch m.Key.(type) {
+				case *ast.Ident:
+					key = m.Key.(*ast.Ident).Name
+				case *ast.SelectorExpr:
+					key = m.Key.(*ast.SelectorExpr).Sel.Name
+				}
+
+				var value string
+				switch m.Value.(type) {
+				case *ast.Ident:
+					value = m.Value.(*ast.Ident).Name
+				case *ast.SelectorExpr:
+					value = m.Value.(*ast.SelectorExpr).Sel.Name
+				}
+
+				a.Maps[x.Name.Name] = Map{
+					Key:   key,
+					Value: value,
+				}
 			case *ast.StructType:
 				id := x.Name.Name
 				a.Structs[id] = Struct{

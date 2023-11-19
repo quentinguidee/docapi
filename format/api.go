@@ -46,7 +46,7 @@ func (a *api) LinkResponses() error {
 	return nil
 }
 
-func (a *api) CollectComponents(structs map[string]collector.Struct, aliases map[string]string) error {
+func (a *api) CollectComponents(structs map[string]collector.Struct, aliases map[string]string, maps map[string]collector.Map) error {
 	it := 0
 	itComponents := a.GetReferencedComponents()
 	done := 0
@@ -59,6 +59,8 @@ func (a *api) CollectComponents(structs map[string]collector.Struct, aliases map
 				a.Components.SetSchema(comp, a.schemaFromStruct(s))
 			} else if alias, ok := aliases[comp]; ok {
 				a.Components.SetSchema(comp, a.schemaFromAlias(alias))
+			} else if m, ok := maps[comp]; ok {
+				a.Components.SetSchema(comp, a.schemaFromMap(m))
 			}
 		}
 
@@ -87,6 +89,16 @@ func (a *api) schemaFromStruct(tp collector.Struct) types.FormatSchema {
 		schema.SetProperty(fieldName, a.schemaFromAlias(field.Type))
 	}
 	return schema
+}
+
+func (a *api) schemaFromMap(tp collector.Map) types.FormatSchema {
+	return types.FormatSchema{
+		Type: "object",
+		Properties: map[string]types.FormatSchema{
+			tp.Key:   a.schemaFromAlias(tp.Key),
+			tp.Value: a.schemaFromAlias(tp.Value),
+		},
+	}
 }
 
 func (a *api) schemaFromAlias(name string) types.FormatSchema {
