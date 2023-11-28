@@ -131,7 +131,13 @@ func (a *TypesCollector) collect(path string) error {
 						case *ast.Ident:
 							t = tp.(*ast.Ident).Name
 						case *ast.ArrayType:
-							id := tp.(*ast.ArrayType).Elt.(*ast.Ident).Name
+							var id string
+							switch tp.(*ast.ArrayType).Elt.(type) {
+							case *ast.Ident:
+								id = tp.(*ast.ArrayType).Elt.(*ast.Ident).Name
+							case *ast.StarExpr:
+								id = tp.(*ast.ArrayType).Elt.(*ast.StarExpr).X.(*ast.Ident).Name
+							}
 							t = "[]" + id
 						case *ast.MapType:
 							t = "object"
